@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
+import './ChatComponent.css'; // Import the CSS file
 
-const ChatApp = () => {
+const ChatComponent = () => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [socket, setSocket] = useState(null);
@@ -10,10 +11,8 @@ const ChatApp = () => {
     const DEVICE_ID = 'device1';
     const TARGET_DEVICE = 'device2';
     const WS_URL = `ws://192.168.1.178:8765/ws/${DEVICE_ID}`;
-    // const WS_URL = 'ws://192.168.1.178:8765/ws/device1_device2'
 
     useEffect(() => {
-        // Establish WebSocket connection
         const ws = new WebSocket(WS_URL);
 
         ws.onopen = () => {
@@ -51,40 +50,33 @@ const ChatApp = () => {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-gray-100 p-4">
-            <div className="flex-grow overflow-y-auto mb-4 space-y-2">
+        <div className="chat-container">
+            <div className="chat-header">
                 <h1>{DEVICE_ID}</h1>
+            </div>
+
+            <div className="chat-messages">
                 {messages.map((msg, index) => (
                     <div
                         key={index}
-                        className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
+                        className={`message ${msg.sender === 'me' ? 'message-sent' : 'message-received'}`}
                     >
-                        <div
-                            className={`p-2 rounded-lg max-w-[70%] ${
-                                msg.sender === 'me'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-200'
-                            }`}
-                        >
+                        <div className="message-text">
                             {msg.text}
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="flex">
+            <div className="chat-input">
                 <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                    className="flex-grow p-2 border rounded-l-lg"
                     placeholder="Type a message"
                 />
-                <button
-                    onClick={sendMessage}
-                    className="bg-blue-500 text-white p-2 rounded-r-lg"
-                >
+                <button onClick={sendMessage}>
                     <Send />
                 </button>
             </div>
@@ -92,4 +84,4 @@ const ChatApp = () => {
     );
 };
 
-export default ChatApp;
+export default ChatComponent;
