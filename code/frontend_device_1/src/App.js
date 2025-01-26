@@ -5,7 +5,7 @@ import ChatComponent from './components/ChatComponent';
 function App() {
   return (
     <div className="App">
-      <h1>ChatterBox </h1>
+      <h1>Chatter Box</h1>
       <ChatComponent />
     </div>
   );
