@@ -9,11 +9,10 @@ const ChatComponent = () => {
     const [language, setLanguage] = useState('English');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-    const LANGUAGES = ['English', 'Hindi', 'French', 'German'];
-
-    const DEVICE_ID = 'device1';
-    const TARGET_DEVICE = 'device2';
-    const WS_URL = `ws://192.168.1.178:8765/ws/${DEVICE_ID}`;
+    const LANGUAGES = process.env.REACT_APP_LANGUAGES.split(',');
+    const DEVICE_ID = process.env.REACT_APP_DEVICE_ID;
+    const TARGET_DEVICE = process.env.REACT_APP_TARGET_DEVICE;
+    const WS_URL = `${process.env.REACT_APP_WS_URL}${DEVICE_ID}`;
 
     useEffect(() => {
         const ws = new WebSocket(`${WS_URL}?language=${language}`);
@@ -62,7 +61,7 @@ const ChatComponent = () => {
     return (
         <div className="chat-container">
             <div className="chat-header">
-                <h1>Device-1</h1>
+                <h1>{process.env.REACT_APP_NAME}</h1>
                 <div className="language-dropdown">
                     <div 
                         className="dropdown-header" 
