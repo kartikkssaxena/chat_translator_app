@@ -1,58 +1,89 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
-import './ChatComponent.css'; // Import the CSS file
+import './ChatComponent.css';
 
 const ChatComponent = () => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [socket, setSocket] = useState(null);
-    const messagesEndRef = useRef(null);
+    const [language, setLanguage] = useState('English');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const LANGUAGES = ['English', 'Hindi', 'French', 'German'];
 
     const DEVICE_ID = 'device1';
     const TARGET_DEVICE = 'device2';
     const WS_URL = `ws://192.168.1.178:8765/ws/${DEVICE_ID}`;
 
     useEffect(() => {
-        const ws = new WebSocket(WS_URL);
+        const ws = new WebSocket(`${WS_URL}?language=${language}`);
 
-        ws.onopen = () => {
-            console.log('Connected to WebSocket');
-        };
-
+        ws.onopen = () => console.log('Connected to WebSocket');
         ws.onmessage = (event) => {
             const receivedMessage = JSON.parse(event.data);
             setMessages(prev => [...prev, {
                 text: receivedMessage.message,
-                sender: 'other'
+                sender: 'other',
+                language: receivedMessage.language
             }]);
         };
 
         setSocket(ws);
 
         return () => ws.close();
-    }, []);
+    }, [language]);
 
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
 
         const messageData = {
             target_device: TARGET_DEVICE,
-            message: newMessage
+            message: newMessage,
+            language: language
         };
 
         socket.send(JSON.stringify(messageData));
 
         setMessages(prev => [...prev, {
             text: newMessage,
-            sender: 'me'
+            sender: 'me',
+            language: language
         }]);
         setNewMessage('');
+    };
+
+    const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+
+    const handleLanguageChange = (selectedLanguage) => {
+        setLanguage(selectedLanguage);
+        setIsDropdownOpen(false);
     };
 
     return (
         <div className="chat-container">
             <div className="chat-header">
-                <h1>{DEVICE_ID}</h1>
+                <h1>Device-1</h1>
+                <div className="language-dropdown">
+                    <div 
+                        className="dropdown-header" 
+                        onClick={toggleDropdown}
+                    >
+                        {language}
+                        <span className="dropdown-arrow">▼</span>
+                    </div>
+                    {isDropdownOpen && (
+                        <ul className="dropdown-list">
+                            {LANGUAGES.filter(l => l !== language).map(lang => (
+                                <li 
+                                    key={lang} 
+                                    onClick={() => handleLanguageChange(lang)}
+                                >
+                                    {lang}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             </div>
 
             <div className="chat-messages">
@@ -63,6 +94,7 @@ const ChatComponent = () => {
                     >
                         <div className="message-text">
                             {msg.text}
+                            {/* <span className="message-language">({msg.language})</span> */}
                         </div>
                     </div>
                 ))}
@@ -73,7 +105,7 @@ const ChatComponent = () => {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Type a message"
                 />
                 <button onClick={sendMessage}>
