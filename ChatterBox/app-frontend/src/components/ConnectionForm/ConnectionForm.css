@@ -1,0 +1,72 @@
+.connection-form-container {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    padding: 20px;
+}
+
+.connection-form {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.connection-form input,
+.connection-form select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.connection-form input:focus,
+.connection-form select:focus {
+    border-color: #2563eb;
+}
+
+.connection-form select {
+    background-color: white;
+    cursor: pointer;
+}
+
+.connection-form button {
+    background-color: #2563eb;
+    color: white;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.connection-form button:hover {
+    background-color: #1d4ed8;
+}
+
+.connection-form button:active {
+    transform: translateY(1px);
+}
+
+@media (max-width: 480px) {
+    .connection-form {
+        padding: 1.5rem;
+    }
+    
+    .connection-form input,
+    .connection-form select,
+    .connection-form button {
+        padding: 0.625rem;
+    }
+}
