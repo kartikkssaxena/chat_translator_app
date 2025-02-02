@@ -22,7 +22,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    await connection_manager.connect_to_server("ws://localhost:8770/ws/server")
+    await connection_manager.connect_to_server("ws://192.168.1.178:8770/ws/server")
 
 @app.websocket("/ws/{device_id}")
 async def websocket_endpoint(websocket: WebSocket, device_id: str):

@@ -6,6 +6,7 @@
 .pnp.js
 package-lock.json
 chat_database.db
+/.venv
 
 # testing
 /coverage
