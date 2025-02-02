@@ -20,28 +20,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup_event():
-    await connection_manager.connect_to_server("ws://localhost:8770/ws/server")
-
-@app.websocket("/ws/{device_id}")
-async def websocket_endpoint(websocket: WebSocket, device_id: str):
+@app.websocket("/ws/server")
+async def websocket_endpoint(websocket: WebSocket):
     # Get device language on connection
-    language = await connection_manager.connect(websocket, device_id)
+    language = await connection_manager.connect(websocket, "server")
     
     try:
         while True:
-            # Receive message from frontend
+            # Receive message from backend
             data = await websocket.receive_json()
+            print(f"server - Received message from backend")
+            print(f"server - Data: {data}")
+            device_id = data['sender']
             target_device = data['target_device']
             message = data['message']
             new_language = data.get('language', language)
-
-            print("backend")
-            print(f"Received message from {device_id} to {target_device}")
-            print(f"Message: {message}")
-            print(f"Language: {new_language}")
-
+            
+            print(f"server - Received message from {device_id} to {target_device}")
+            print(f"server - Message: {message}")
+            print(f"server - Language: {new_language}")
+            
             # Save device language if changed
             if new_language != language:
                 db_manager.save_device_language(device_id, new_language)
@@ -55,9 +53,9 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
                 language=language
             )
 
-            print("sending data to server")
-            # Forward message to the server
-            await connection_manager.send_message_to_server(
+            # sending data to target device
+            # Forward message to target backend
+            await connection_manager.send_message(
                 device_id, 
                 target_device, 
                 message, 
@@ -65,10 +63,10 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
             )
 
     except WebSocketDisconnect:
-        connection_manager.disconnect(device_id)
+        connection_manager.disconnect("server")
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=8765)
+    uvicorn.run(app, host="0.0.0.0", port=8770)
 
 if __name__ == "__main__":
     run_server()

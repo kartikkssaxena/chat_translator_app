@@ -1,14 +1,11 @@
 import asyncio
-import websockets
 from fastapi import WebSocket
 from src.database.database_manager import DatabaseManager
-import json
 
 class ConnectionManager:
     def __init__(self, db_manager: DatabaseManager):
         self.active_connections = {}
         self.db_manager = db_manager
-        self.server_socket = None
 
     async def connect(self, websocket: WebSocket, device_id: str):
         """Connect a new client and retrieve chat history"""
@@ -43,19 +40,3 @@ class ConnectionManager:
                 'message': message,
                 'language': language
             })
-
-    async def connect_to_server(self, server_url: str):
-        """Connect to the server"""
-        self.server_socket = await websockets.connect(server_url)
-
-    async def send_message_to_server(self, sender: str, target_device: str, message: str, language: str):
-        """Send message to the server"""
-        if self.server_socket:
-            await self.server_socket.send(
-                json.dumps({
-                    'sender': sender,
-                    'target_device': target_device,
-                    'message': message,
-                    'language': language
-                })
-            )
