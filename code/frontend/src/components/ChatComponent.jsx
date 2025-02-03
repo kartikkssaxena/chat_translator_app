@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import './ChatComponent.css';
+import { socketClosureInstance } from '../utils';
 
 const ChatComponent = () => {
     const [messages, setMessages] = useState([]);
@@ -29,7 +30,7 @@ const ChatComponent = () => {
 
         setSocket(ws);
 
-        return () => ws.close();
+        // return () => ws.close();
     }, [language]);
 
     const sendMessage = () => {
@@ -63,8 +64,8 @@ const ChatComponent = () => {
             <div className="chat-header">
                 <h1>{process.env.REACT_APP_NAME}</h1>
                 <div className="language-dropdown">
-                    <div 
-                        className="dropdown-header" 
+                    <div
+                        className="dropdown-header"
                         onClick={toggleDropdown}
                     >
                         {language}
@@ -73,8 +74,8 @@ const ChatComponent = () => {
                     {isDropdownOpen && (
                         <ul className="dropdown-list">
                             {LANGUAGES.filter(l => l !== language).map(lang => (
-                                <li 
-                                    key={lang} 
+                                <li
+                                    key={lang}
                                     onClick={() => handleLanguageChange(lang)}
                                 >
                                     {lang}
@@ -103,7 +104,10 @@ const ChatComponent = () => {
                 <input
                     type="text"
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => {
+                        setNewMessage(e.target.value)
+                        socketClosureInstance(socket, DEVICE_ID, language);
+                    }}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Type a message"
                 />
