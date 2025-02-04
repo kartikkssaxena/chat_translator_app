@@ -3,41 +3,30 @@ import { Send } from 'lucide-react';
 import './ChatComponent.css';
 import { socketClosureInstance } from '../utils';
 
-const ChatComponent = () => {
+const ChatComponent = ({ deviceId, language, socket }) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
-    const [socket, setSocket] = useState(null);
-    const [language, setLanguage] = useState('English');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-    const LANGUAGES = process.env.REACT_APP_LANGUAGES.split(',');
-    const DEVICE_ID = process.env.REACT_APP_DEVICE_ID;
-    const TARGET_DEVICE = process.env.REACT_APP_TARGET_DEVICE;
-    const WS_URL = `${process.env.REACT_APP_WS_URL}${DEVICE_ID}`;
 
     useEffect(() => {
-        const ws = new WebSocket(`${WS_URL}?language=${language}`);
+        if (socket) {
+            socket.onmessage = (event) => {
+                const receivedMessage = JSON.parse(event.data);
+                setMessages(prev => [...prev, {
+                    text: receivedMessage.message,
+                    sender: 'other',
+                    language: receivedMessage.language
+                }]);
+            };
 
-        ws.onopen = () => console.log('Connected to WebSocket');
-        ws.onmessage = (event) => {
-            const receivedMessage = JSON.parse(event.data);
-            setMessages(prev => [...prev, {
-                text: receivedMessage.message,
-                sender: 'other',
-                language: receivedMessage.language
-            }]);
-        };
-
-        setSocket(ws);
-
-        // return () => ws.close();
-    }, [language]);
+            socketClosureInstance(socket, deviceId, language);
+        }
+    }, [socket, deviceId, language]);
 
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
 
         const messageData = {
-            target_device: TARGET_DEVICE,
+            target_device: process.env.REACT_APP_TARGET_DEVICE,
             message: newMessage,
             language: language
         };
@@ -52,37 +41,14 @@ const ChatComponent = () => {
         setNewMessage('');
     };
 
-    const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
-
-    const handleLanguageChange = (selectedLanguage) => {
-        setLanguage(selectedLanguage);
-        setIsDropdownOpen(false);
-    };
-
     return (
         <div className="chat-container">
             <div className="chat-header">
-                <h1>{process.env.REACT_APP_NAME}</h1>
+                <h1>{deviceId}</h1>
                 <div className="language-dropdown">
-                    <div
-                        className="dropdown-header"
-                        onClick={toggleDropdown}
-                    >
+                    <div className="dropdown-header">
                         {language}
-                        <span className="dropdown-arrow">▼</span>
                     </div>
-                    {isDropdownOpen && (
-                        <ul className="dropdown-list">
-                            {LANGUAGES.filter(l => l !== language).map(lang => (
-                                <li
-                                    key={lang}
-                                    onClick={() => handleLanguageChange(lang)}
-                                >
-                                    {lang}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
                 </div>
             </div>
 
@@ -94,7 +60,6 @@ const ChatComponent = () => {
                     >
                         <div className="message-text">
                             {msg.text}
-                            {/* <span className="message-language">({msg.language})</span> */}
                         </div>
                     </div>
                 ))}
@@ -104,10 +69,7 @@ const ChatComponent = () => {
                 <input
                     type="text"
                     value={newMessage}
-                    onChange={(e) => {
-                        setNewMessage(e.target.value)
-                        socketClosureInstance(socket, DEVICE_ID, language);
-                    }}
+                    onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Type a message"
                 />

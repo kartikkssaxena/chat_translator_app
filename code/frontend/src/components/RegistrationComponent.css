@@ -1,0 +1,91 @@
+.registration-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.registration-container h1 {
+    margin-bottom: 2rem;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 30rem;
+    height: 20rem;
+    background-color: white;
+    padding: 2rem;
+    border-radius: 1rem;
+}
+
+.form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.form-group label {
+    margin-right: 1rem;
+    font-weight: bold;
+    text-align: right;
+    width: 30%;
+}
+
+.form-group input,
+.form-group select {
+    padding: 1rem;
+    font-size: 1rem;
+    border: 0.1rem solid #ccc;
+    border-radius: 0.5rem;
+    width: 70%;
+    box-sizing: border-box;
+}
+
+.connect_button {
+    padding: 1rem;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    width: 6rem;
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.connect_button:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 600px) {
+    form {
+        width: 90%;
+        height: auto;
+        padding: 1rem;
+    }
+
+    .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-group label {
+        width: 100%;
+        text-align: left;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+    }
+
+    .connect_button {
+        width: 100%;
+    }
+}
