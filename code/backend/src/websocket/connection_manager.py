@@ -51,11 +51,12 @@ class ConnectionManager:
 
     async def broadcast_message(self, message: str):
         """Broadcast message to all connected clients"""
+        message_json = json.loads(message)
         for device_id, websocket in self.active_connections.items():
             await websocket.send_json({
-                'sender': 'server',
-                'message': message,
-                'language': 'server'
+                'sender': message_json['sender'],
+                'message': message_json['message'],
+                'language': message_json['language']
             })
 
     async def listen_to_server(self):
