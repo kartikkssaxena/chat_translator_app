@@ -20,6 +20,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    await connection_manager.connect_to_server("ws://192.168.1.178:8770/ws/server")
+
 @app.websocket("/ws/{device_id}")
 async def websocket_endpoint(websocket: WebSocket, device_id: str):
     # Get device language on connection
@@ -27,11 +31,16 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
     
     try:
         while True:
-            # Receive message from client
+            # Receive message from frontend
             data = await websocket.receive_json()
             target_device = data['target_device']
             message = data['message']
             new_language = data.get('language', language)
+
+            print("backend")
+            print(f"Received message from {device_id} to {target_device}")
+            print(f"Message: {message}")
+            print(f"Language: {new_language}")
 
             # Save device language if changed
             if new_language != language:
@@ -46,8 +55,9 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
                 language=language
             )
 
-            # Send message to target device
-            await connection_manager.send_message(
+            print("sending data to server")
+            # Forward message to the server
+            await connection_manager.send_message_to_server(
                 device_id, 
                 target_device, 
                 message, 
