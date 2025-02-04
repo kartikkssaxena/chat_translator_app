@@ -64,9 +64,13 @@ class ConnectionManager:
         while True:
             try:
                 message = await self.server_socket.recv()
-                print(f"Received message from server: {message}")
-                print(message)
-                await self.broadcast_message(message)
+                message_json = json.loads(message)
+                print(f"Received message from server: {message_json}")
+                
+                if message_json["type"] == "active_users":
+                    print(message_json)
+                else:
+                    await self.broadcast_message(message)
             except websockets.ConnectionClosed:
                 print("Connection to server closed")
                 break

@@ -3,6 +3,7 @@ from fastapi import WebSocket
 from src.database.database_manager import DatabaseManager
 import json
 
+
 class ConnectionManager:
     def __init__(self, db_manager: DatabaseManager):
         self.active_connections = {}
@@ -28,6 +29,23 @@ class ConnectionManager:
         }
         print(device_id, self.user_details[device_id])
         print(f"active connections: {self.active_connections}")
+
+        # Broadcast the list of all active users to all active connections
+        active_users = [
+            {
+                "device_id": id,
+                # "ip_address": details["ip_address"],
+                "language": details["language"],
+            }
+            for id, details in self.user_details.items()
+        ]
+        broadcast_message = {
+            "type": "active_users",
+            "users": active_users,
+        }
+        for conn in self.active_connections.values():
+            await conn.send_json(broadcast_message)
+
         # Retrieve and send chat history
         chat_history = self.db_manager.get_chat_history(device_id, device_id)
         for msg in chat_history:
