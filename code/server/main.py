@@ -23,8 +23,7 @@ app.add_middleware(
 @app.websocket("/ws/server")
 async def websocket_endpoint(websocket: WebSocket):
 
-    conn_res = await connection_manager.connect(websocket)
-    print("/n" + (conn_res) + "/n")
+    language = await connection_manager.connect(websocket)
 
     try:
         while True:

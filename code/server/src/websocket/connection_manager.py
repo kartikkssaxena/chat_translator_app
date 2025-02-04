@@ -34,8 +34,8 @@ class ConnectionManager:
             await websocket.send_json(
                 {"sender": msg[0], "message": msg[1], "language": msg[3]}
             )
-
-        return f"Connected to server - device id: {device_id}"
+        print(f"Connected to server - device id: {device_id}")
+        return language
 
     def disconnect(self, device_id: str):
         """Disconnect a client"""

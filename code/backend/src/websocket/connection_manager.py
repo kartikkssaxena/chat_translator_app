@@ -45,8 +45,19 @@ class ConnectionManager:
             })
 
     async def connect_to_server(self, server_url: str):
-        """Connect to the server"""
+        """Connect to the server and start listening for messages"""
         self.server_socket = await websockets.connect(server_url)
+        asyncio.create_task(self.listen_to_server())
+
+    async def listen_to_server(self):
+        """Listen for messages from the server and print them"""
+        while True:
+            try:
+                message = await self.server_socket.recv()
+                print(f"Received message from server: {message}")
+            except websockets.ConnectionClosed:
+                print("Connection to server closed")
+                break
 
     async def send_message_to_server(self, sender: str, target_device: str, message: str, language: str):
         """Send message to the server"""
