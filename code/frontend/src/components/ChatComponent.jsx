@@ -58,7 +58,7 @@ const ChatComponent = () => {
         setLanguage(selectedLanguage);
         setIsDropdownOpen(false);
     };
-
+    console.log(messages)
     return (
         <div className="chat-container">
             <div className="chat-header">

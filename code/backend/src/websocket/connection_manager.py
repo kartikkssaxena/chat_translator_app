@@ -49,12 +49,23 @@ class ConnectionManager:
         self.server_socket = await websockets.connect(server_url)
         asyncio.create_task(self.listen_to_server())
 
+    async def broadcast_message(self, message: str):
+        """Broadcast message to all connected clients"""
+        for device_id, websocket in self.active_connections.items():
+            await websocket.send_json({
+                'sender': 'server',
+                'message': message,
+                'language': 'server'
+            })
+
     async def listen_to_server(self):
-        """Listen for messages from the server and print them"""
+        """Listen for messages from the server and broadcast them"""
         while True:
             try:
                 message = await self.server_socket.recv()
                 print(f"Received message from server: {message}")
+                print(message)
+                await self.broadcast_message(message)
             except websockets.ConnectionClosed:
                 print("Connection to server closed")
                 break
