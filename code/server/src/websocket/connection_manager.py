@@ -74,6 +74,6 @@ class ConnectionManager:
             target_socket = self.active_connections[target_device]
             print(f"target_socket: {target_socket}")
             await target_socket.send_json(
-                {"sender": sender, "message": message, "language": language}
+                {"sender": sender, "message": message, "language": language, "type": "message"}
             )
             print(f"Message sent to {target_device}")

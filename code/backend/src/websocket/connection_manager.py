@@ -49,6 +49,12 @@ class ConnectionManager:
         self.server_socket = await websockets.connect(server_url)
         asyncio.create_task(self.listen_to_server())
 
+    async def broadcast_active_users(self, active_users: dict):
+        """Broadcast list of active users to all connected clients"""
+        print("active users", active_users)
+        for device_id, websocket in self.active_connections.items():
+            await websocket.send_json(active_users)
+
     async def broadcast_message(self, message: str):
         """Broadcast message to all connected clients"""
         message_json = json.loads(message)
@@ -56,7 +62,8 @@ class ConnectionManager:
             await websocket.send_json({
                 'sender': message_json['sender'],
                 'message': message_json['message'],
-                'language': message_json['language']
+                'language': message_json['language'],
+                'type': message_json['type']
             })
 
     async def listen_to_server(self):
@@ -69,6 +76,7 @@ class ConnectionManager:
                 
                 if message_json["type"] == "active_users":
                     print(message_json)
+                    await self.broadcast_active_users(message_json)
                 else:
                     await self.broadcast_message(message)
             except websockets.ConnectionClosed:

@@ -11,11 +11,16 @@ const ChatComponent = ({ deviceId, language, socket }) => {
         if (socket) {
             socket.onmessage = (event) => {
                 const receivedMessage = JSON.parse(event.data);
-                setMessages(prev => [...prev, {
-                    text: receivedMessage.message,
-                    sender: 'other',
-                    language: receivedMessage.language
-                }]);
+                console.log(receivedMessage);
+                if(receivedMessage?.type === 'message'){
+                    setMessages(prev => [...prev, {
+                        text: receivedMessage.message,
+                        sender: 'other',
+                        language: receivedMessage.language
+                    }]);
+                }else {
+                    console.log('receivedMessage', receivedMessage);
+                }
             };
 
             socketClosureInstance(socket, deviceId, language);
