@@ -3,117 +3,134 @@ import { Send } from 'lucide-react';
 import './ChatComponent.css';
 import { socketClosureInstance } from '../utils';
 
-const ChatComponent = () => {
-    const [messages, setMessages] = useState([]);
+const ChatComponent = ({ deviceId, language, socket }) => {
     const [newMessage, setNewMessage] = useState('');
-    const [socket, setSocket] = useState(null);
-    const [language, setLanguage] = useState('English');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-    const LANGUAGES = process.env.REACT_APP_LANGUAGES.split(',');
-    const DEVICE_ID = process.env.REACT_APP_DEVICE_ID;
-    const TARGET_DEVICE = process.env.REACT_APP_TARGET_DEVICE;
-    const WS_URL = `${process.env.REACT_APP_WS_URL}${DEVICE_ID}`;
+    const [activeUsers, setActiveUsers] = useState([]);
+    const [currentUser, setCurrentUser] = useState({});
+    const [chatHistory, setChatHistory] = useState({});
 
     useEffect(() => {
-        const ws = new WebSocket(`${WS_URL}?language=${language}`);
+        if (socket) {
+            socket.onmessage = (event) => {
+                const receivedMessage = JSON.parse(event.data);
+                if (receivedMessage?.type === 'message') {
+                    console.log("receivedMessage", receivedMessage);
+                    setChatHistory(prev => ({
+                        ...prev,
+                        [receivedMessage.sender]: [
+                            ...(prev[receivedMessage.sender] || []),
+                            {
+                                text: receivedMessage.message,
+                                sender: receivedMessage.sender,
+                                language: receivedMessage.language
+                            }
+                        ]
+                    }));
 
-        ws.onopen = () => console.log('Connected to WebSocket');
-        ws.onmessage = (event) => {
-            const receivedMessage = JSON.parse(event.data);
-            setMessages(prev => [...prev, {
-                text: receivedMessage.message,
-                sender: 'other',
-                language: receivedMessage.language
-            }]);
-        };
+                } else if (receivedMessage?.type === 'active_users') {
+                    console.log('active users list -', receivedMessage);
+                    setActiveUsers(receivedMessage?.users);
+                }
+            };
 
-        setSocket(ws);
-
-        // return () => ws.close();
-    }, [language]);
+            socketClosureInstance(socket, deviceId, language);
+        }
+    }, [socket, deviceId, language]);
 
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
 
         const messageData = {
-            target_device: TARGET_DEVICE,
+            target_device: currentUser.device_id,
             message: newMessage,
             language: language
         };
 
         socket.send(JSON.stringify(messageData));
 
-        setMessages(prev => [...prev, {
-            text: newMessage,
-            sender: 'me',
-            language: language
-        }]);
+        if (deviceId !== currentUser.device_id) {
+            setChatHistory(prev => ({
+                ...prev,
+                [currentUser.device_id]: [
+                    ...(prev[currentUser.device_id] || []),
+                    {
+                        text: newMessage,
+                        sender: deviceId,
+                        language: language
+                    }
+                ]
+            }));
+        }
+
         setNewMessage('');
     };
 
-    const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+    const getChatHistory = () => {
 
-    const handleLanguageChange = (selectedLanguage) => {
-        setLanguage(selectedLanguage);
-        setIsDropdownOpen(false);
-    };
+        if (!currentUser?.device_id) {
+            return [];
+        }
+        if (!chatHistory[currentUser.device_id]) {
+            return [];
+        }
+        if (chatHistory[currentUser.device_id].length === 0) {
+            return [];
+        }
+        return chatHistory[currentUser.device_id];
+    }
 
     return (
         <div className="chat-container">
             <div className="chat-header">
-                <h1>{process.env.REACT_APP_NAME}</h1>
+                <h1>{deviceId}</h1>
                 <div className="language-dropdown">
-                    <div
-                        className="dropdown-header"
-                        onClick={toggleDropdown}
-                    >
+                    <div className="dropdown-header">
                         {language}
-                        <span className="dropdown-arrow">▼</span>
                     </div>
-                    {isDropdownOpen && (
-                        <ul className="dropdown-list">
-                            {LANGUAGES.filter(l => l !== language).map(lang => (
-                                <li
-                                    key={lang}
-                                    onClick={() => handleLanguageChange(lang)}
-                                >
-                                    {lang}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
                 </div>
             </div>
-
-            <div className="chat-messages">
-                {messages.map((msg, index) => (
-                    <div
-                        key={index}
-                        className={`message ${msg.sender === 'me' ? 'message-sent' : 'message-received'}`}
-                    >
-                        <div className="message-text">
-                            {msg.text}
-                            {/* <span className="message-language">({msg.language})</span> */}
-                        </div>
+            <div className='chat-window-container'>
+                <div className='active-users'>
+                    <h2>Available Users</h2>
+                    <ul>
+                        {activeUsers.map((user) => (
+                            <li
+                                key={user.device_id}
+                                onClick={() => setCurrentUser(user)}
+                                className={currentUser.device_id === user.device_id ? 'selected-user' : ''}
+                            >
+                                {user.device_id} ({user.language})
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <div className='chat-window'>
+                    <div className="chat-messages">
+                        {getChatHistory().map((msg, index) => (
+                            <div
+                                key={index}
+                                className={`message ${msg.sender === deviceId ? 'message-sent' : 'message-received'}`}
+                            >
+                                <div className="message-text">
+                                    {msg.text}
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
 
-            <div className="chat-input">
-                <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => {
-                        setNewMessage(e.target.value)
-                        socketClosureInstance(socket, DEVICE_ID, language);
-                    }}
-                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                    placeholder="Type a message"
-                />
-                <button onClick={sendMessage}>
-                    <Send />
-                </button>
+                    <div className="chat-input">
+                        <input
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                            placeholder="Type a message"
+                        />
+                        <button onClick={sendMessage}>
+                            <Send />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
