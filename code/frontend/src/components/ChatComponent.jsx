@@ -4,24 +4,31 @@ import './ChatComponent.css';
 import { socketClosureInstance } from '../utils';
 
 const ChatComponent = ({ deviceId, language, socket }) => {
-    const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [activeUsers, setActiveUsers] = useState([]);
     const [currentUser, setCurrentUser] = useState({});
+    const [chatHistory, setChatHistory] = useState({});
 
     useEffect(() => {
         if (socket) {
             socket.onmessage = (event) => {
                 const receivedMessage = JSON.parse(event.data);
-                console.log(receivedMessage);
                 if (receivedMessage?.type === 'message') {
-                    setMessages(prev => [...prev, {
-                        text: receivedMessage.message,
-                        sender: receivedMessage.sender,
-                        language: receivedMessage.language
-                    }]);
+                    console.log("receivedMessage", receivedMessage);
+                    setChatHistory(prev => ({
+                        ...prev,
+                        [receivedMessage.sender]: [
+                            ...(prev[receivedMessage.sender] || []),
+                            {
+                                text: receivedMessage.message,
+                                sender: receivedMessage.sender,
+                                language: receivedMessage.language
+                            }
+                        ]
+                    }));
+
                 } else if (receivedMessage?.type === 'active_users') {
-                    console.log('receivedMessage', receivedMessage);
+                    console.log('active users list -', receivedMessage);
                     setActiveUsers(receivedMessage?.users);
                 }
             };
@@ -41,14 +48,37 @@ const ChatComponent = ({ deviceId, language, socket }) => {
 
         socket.send(JSON.stringify(messageData));
 
-        setMessages(prev => [...prev, {
-            text: newMessage,
-            sender: deviceId,
-            language: language
-        }]);
+        if (deviceId !== currentUser.device_id) {
+            setChatHistory(prev => ({
+                ...prev,
+                [currentUser.device_id]: [
+                    ...(prev[currentUser.device_id] || []),
+                    {
+                        text: newMessage,
+                        sender: deviceId,
+                        language: language
+                    }
+                ]
+            }));
+        }
+
         setNewMessage('');
     };
-    console.log("messages", messages);
+
+    const getChatHistory = () => {
+
+        if (!currentUser?.device_id) {
+            return [];
+        }
+        if (!chatHistory[currentUser.device_id]) {
+            return [];
+        }
+        if (chatHistory[currentUser.device_id].length === 0) {
+            return [];
+        }
+        return chatHistory[currentUser.device_id];
+    }
+
     return (
         <div className="chat-container">
             <div className="chat-header">
@@ -76,7 +106,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                 </div>
                 <div className='chat-window'>
                     <div className="chat-messages">
-                        {messages.map((msg, index) => (
+                        {getChatHistory().map((msg, index) => (
                             <div
                                 key={index}
                                 className={`message ${msg.sender === deviceId ? 'message-sent' : 'message-received'}`}
