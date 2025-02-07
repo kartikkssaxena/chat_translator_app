@@ -62,18 +62,12 @@ class ConnectionManager:
         if device_id in self.user_details:
             del self.user_details[device_id]
 
-    async def send_message(
-        self, sender: str, target_device: str, message: str, language: str
-    ):
+    async def send_message(self, outgoing_data: dict, target_device: str):
         """Send message to a specific device"""
-        print("in send messages....")
-        print("target_device: ", target_device)
         print(f"All active connections: {self.active_connections}")
         if target_device in self.active_connections:
             print(f"Sending message to {target_device}")
             target_socket = self.active_connections[target_device]
             print(f"target_socket: {target_socket}")
-            await target_socket.send_json(
-                {"sender": sender, "message": message, "language": language, "type": "message"}
-            )
+            await target_socket.send_json(outgoing_data)
             print(f"Message sent to {target_device}")

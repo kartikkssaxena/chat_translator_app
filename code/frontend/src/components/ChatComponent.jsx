@@ -20,9 +20,10 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                         [receivedMessage.sender]: [
                             ...(prev[receivedMessage.sender] || []),
                             {
-                                text: receivedMessage.message,
-                                sender: receivedMessage.sender,
-                                language: receivedMessage.language
+                                sender: receivedMessage?.sender || '',
+                                language: receivedMessage?.language || '',
+                                message: receivedMessage?.message || '',
+                                timeStamp: receivedMessage?.timeStamp || new Date().toISOString()
                             }
                         ]
                     }));
@@ -39,11 +40,15 @@ const ChatComponent = ({ deviceId, language, socket }) => {
 
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
-
+        let timeStamp = new Date().toISOString();
         const messageData = {
+            type: 'message',
             target_device: currentUser.device_id,
+            target_device_language: currentUser.language,
             message: newMessage,
-            language: language
+            language: language,
+            chatHistory: chatHistory[currentUser.device_id] || [],
+            timeStamp: timeStamp
         };
 
         socket.send(JSON.stringify(messageData));
@@ -54,9 +59,10 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                 [currentUser.device_id]: [
                     ...(prev[currentUser.device_id] || []),
                     {
-                        text: newMessage,
                         sender: deviceId,
-                        language: language
+                        language: language,
+                        message: newMessage,
+                        timeStamp: timeStamp
                     }
                 ]
             }));
@@ -78,7 +84,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
         }
         return chatHistory[currentUser.device_id];
     }
-
+    console.log("chatHistory", chatHistory);
     return (
         <div className="chat-container">
             <div className="chat-header">
@@ -112,7 +118,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                                 className={`message ${msg.sender === deviceId ? 'message-sent' : 'message-received'}`}
                             >
                                 <div className="message-text">
-                                    {msg.text}
+                                    {msg.message}
                                 </div>
                             </div>
                         ))}

@@ -63,7 +63,8 @@ class ConnectionManager:
                 'sender': message_json['sender'],
                 'message': message_json['message'],
                 'language': message_json['language'],
-                'type': message_json['type']
+                'type': message_json['type'],
+                'timeStamp': message_json['timeStamp']
             })
 
     async def listen_to_server(self):
@@ -83,7 +84,7 @@ class ConnectionManager:
                 print("Connection to server closed")
                 break
 
-    async def send_message_to_server(self, sender: str, target_device: str, message: str, language: str):
+    async def send_message_to_server(self, sender: str, target_device: str, message: str, language: str, timeStamp: str):
         """Send message to the server"""
         if self.server_socket:
             await self.server_socket.send(
@@ -91,6 +92,7 @@ class ConnectionManager:
                     'sender': sender,
                     'target_device': target_device,
                     'message': message,
-                    'language': language
+                    'language': language,
+                    'timeStamp': timeStamp
                 })
             )
