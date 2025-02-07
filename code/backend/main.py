@@ -35,17 +35,17 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
             data = await websocket.receive_json()
             target_device = data['target_device']
             message = data['message']
-            language = data.get('language', language)
+            new_language  = data.get('language', language)
             chatHistory = data.get('chatHistory', [])
             timeStamp = data.get('timeStamp', '')
 
             print("backend")
-            print(f"Received message from server", data)
+            print(f"Received message from frontend", data)
 
             # Save device language if changed
-            # if language != language:
-            #     db_manager.save_device_language(device_id, language)
-            #     language = language
+            if new_language  != language:
+                db_manager.save_device_language(device_id, new_language )
+                language = new_language 
 
             # # Save message to database
             # db_manager.save_message(

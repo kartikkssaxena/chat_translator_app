@@ -42,10 +42,10 @@ async def websocket_endpoint(websocket: WebSocket):
             print(f"server - Message: {message}")
             print(f"server - Language: {new_language}")
 
-            # # Save device language if changed
-            # if new_language != language:
-            #     db_manager.save_device_language(device_id, new_language)
-            #     language = new_language
+            # Save device language if changed
+            if new_language != language:
+                db_manager.save_device_language(device_id, new_language)
+                language = new_language
 
             # # Save message to database
             # db_manager.save_message(
