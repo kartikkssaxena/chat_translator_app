@@ -41,33 +41,39 @@ const ChatComponent = ({ deviceId, language, socket }) => {
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
         let timeStamp = new Date().toISOString();
+        let messageObj = {
+            sender: deviceId,
+            language: language,
+            message: newMessage,
+            timeStamp: timeStamp
+        }
+        // update chat history
+        if (deviceId !== currentUser.device_id) {
+            setChatHistory(prev => ({
+                ...prev,
+                [currentUser.device_id]: [
+                    ...(prev[currentUser.device_id] || []),
+                    messageObj
+                ]
+            }));
+        }
+        
+        // Created a local copy of updated history to send to server. This is because state updates are async.
+        let updatedHistory = {...chatHistory};
+        updatedHistory[deviceId] = [...(updatedHistory[deviceId] || []), messageObj];
+        // create message data
         const messageData = {
             type: 'message',
             target_device: currentUser.device_id,
             target_device_language: currentUser.language,
             message: newMessage,
             language: language,
-            chatHistory: chatHistory[currentUser.device_id] || [],
+            chatHistory: updatedHistory,
             timeStamp: timeStamp
         };
-
+        // send message to server
         socket.send(JSON.stringify(messageData));
-
-        if (deviceId !== currentUser.device_id) {
-            setChatHistory(prev => ({
-                ...prev,
-                [currentUser.device_id]: [
-                    ...(prev[currentUser.device_id] || []),
-                    {
-                        sender: deviceId,
-                        language: language,
-                        message: newMessage,
-                        timeStamp: timeStamp
-                    }
-                ]
-            }));
-        }
-
+        // clear input field
         setNewMessage('');
     };
 
