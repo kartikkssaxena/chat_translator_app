@@ -10,7 +10,8 @@ const socketClosure = () => {
                 target_device: "server",
                 message: "Test Ping",
                 sender: DEVICE_ID,
-                language: language
+                language: language,
+                timeStamp: new Date().toISOString()
             };
             console.log("Sending message to the server", messageData);
             socket.send(JSON.stringify(messageData));

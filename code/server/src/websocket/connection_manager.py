@@ -33,6 +33,11 @@ class ConnectionManager:
         device_id = data["sender"]
         client_ip = websocket.client.host
         self.active_connections[device_id] = websocket
+        print(f"data on server - ", data)
+
+        # save device language
+        language = data.get("language","")
+        self.db_manager.save_device_language(device_id, language)
 
         # Retrieve device language
         language = self.db_manager.get_device_language(device_id)
@@ -47,12 +52,12 @@ class ConnectionManager:
         print(f"active connections: {self.active_connections}")
         await self.broadcast_active_users()
 
-        # Retrieve and send chat history
-        chat_history = self.db_manager.get_chat_history(device_id, device_id)
-        for msg in chat_history:
-            await websocket.send_json(
-                {"sender": msg[0], "message": msg[1], "language": msg[3]}
-            )
+        # # Retrieve and send chat history
+        # chat_history = self.db_manager.get_chat_history(device_id, device_id)
+        # for msg in chat_history:
+        #     await websocket.send_json(
+        #         {"sender": msg[0], "message": msg[1], "language": msg[3]}
+        #     )
         print(f"Connected to server - device id: {device_id}")
         return language
 
