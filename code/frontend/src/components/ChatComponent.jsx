@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import './ChatComponent.css';
-import { socketClosureInstance } from '../utils';
+import { chatHistoryClosureInstance, socketClosureInstance } from '../utils';
 
 const ChatComponent = ({ deviceId, language, socket }) => {
     const [newMessage, setNewMessage] = useState('');
@@ -20,9 +20,10 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                         [receivedMessage.sender]: [
                             ...(prev[receivedMessage.sender] || []),
                             {
-                                text: receivedMessage.message,
-                                sender: receivedMessage.sender,
-                                language: receivedMessage.language
+                                sender: receivedMessage?.sender || '',
+                                language: receivedMessage?.language || '',
+                                message: receivedMessage?.message || '',
+                                timeStamp: receivedMessage?.timeStamp || new Date().toISOString()
                             }
                         ]
                     }));
@@ -30,6 +31,10 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                 } else if (receivedMessage?.type === 'active_users') {
                     console.log('active users list -', receivedMessage);
                     setActiveUsers(receivedMessage?.users);
+                }else if( receivedMessage?.type === 'chat_history'){
+                    console.log('chat history -', receivedMessage);
+                    chatHistoryClosureInstance(receivedMessage?.chat_history, setChatHistory);
+                    // setChatHistory(receivedMessage?.chat_history);
                 }
             };
 
@@ -39,29 +44,40 @@ const ChatComponent = ({ deviceId, language, socket }) => {
 
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
-
-        const messageData = {
-            target_device: currentUser.device_id,
+        let timeStamp = new Date().toISOString();
+        let messageObj = {
+            sender: deviceId,
+            language: language,
             message: newMessage,
-            language: language
-        };
-
-        socket.send(JSON.stringify(messageData));
-
+            timeStamp: timeStamp
+        }
+        // update chat history
         if (deviceId !== currentUser.device_id) {
             setChatHistory(prev => ({
                 ...prev,
                 [currentUser.device_id]: [
                     ...(prev[currentUser.device_id] || []),
-                    {
-                        text: newMessage,
-                        sender: deviceId,
-                        language: language
-                    }
+                    messageObj
                 ]
             }));
         }
-
+        
+        // Created a local copy of updated history to send to server. This is because state updates are async.
+        let updatedHistory = {...chatHistory};
+        updatedHistory[deviceId] = [...(updatedHistory[deviceId] || []), messageObj];
+        // create message data
+        const messageData = {
+            type: 'message',
+            target_device: currentUser.device_id,
+            target_device_language: currentUser.language,
+            message: newMessage,
+            language: language,
+            chatHistory: updatedHistory,
+            timeStamp: timeStamp
+        };
+        // send message to server
+        socket.send(JSON.stringify(messageData));
+        // clear input field
         setNewMessage('');
     };
 
@@ -78,7 +94,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
         }
         return chatHistory[currentUser.device_id];
     }
-
+    console.log("chatHistory", chatHistory);
     return (
         <div className="chat-container">
             <div className="chat-header">
@@ -112,7 +128,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                                 className={`message ${msg.sender === deviceId ? 'message-sent' : 'message-received'}`}
                             >
                                 <div className="message-text">
-                                    {msg.text}
+                                    {msg.message}
                                 </div>
                             </div>
                         ))}

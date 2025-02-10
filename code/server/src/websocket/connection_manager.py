@@ -10,6 +10,22 @@ class ConnectionManager:
         self.user_details = {}
         self.db_manager = db_manager
 
+    async def broadcast_active_users(self):
+        """Broadcast list of active users to all connected clients"""
+        active_users = [
+            {
+                "device_id": id,
+                "language": details["language"],
+            }
+            for id, details in self.user_details.items()
+        ]
+        broadcast_message = {
+            "type": "active_users",
+            "users": active_users,
+        }
+        for conn in self.active_connections.values():
+            await conn.send_json(broadcast_message)
+
     async def connect(self, websocket: WebSocket):
         """Connect a new client and retrieve chat history"""
         await websocket.accept()
@@ -17,6 +33,11 @@ class ConnectionManager:
         device_id = data["sender"]
         client_ip = websocket.client.host
         self.active_connections[device_id] = websocket
+        print(f"data on server - ", data)
+
+        # save device language
+        language = data.get("language","")
+        self.db_manager.save_device_language(device_id, language)
 
         # Retrieve device language
         language = self.db_manager.get_device_language(device_id)
@@ -29,29 +50,14 @@ class ConnectionManager:
         }
         print(device_id, self.user_details[device_id])
         print(f"active connections: {self.active_connections}")
+        await self.broadcast_active_users()
 
-        # Broadcast the list of all active users to all active connections
-        active_users = [
-            {
-                "device_id": id,
-                # "ip_address": details["ip_address"],
-                "language": details["language"],
-            }
-            for id, details in self.user_details.items()
-        ]
-        broadcast_message = {
-            "type": "active_users",
-            "users": active_users,
-        }
-        for conn in self.active_connections.values():
-            await conn.send_json(broadcast_message)
-
-        # Retrieve and send chat history
-        chat_history = self.db_manager.get_chat_history(device_id, device_id)
-        for msg in chat_history:
-            await websocket.send_json(
-                {"sender": msg[0], "message": msg[1], "language": msg[3]}
-            )
+        # # Retrieve and send chat history
+        # chat_history = self.db_manager.get_chat_history(device_id, device_id)
+        # for msg in chat_history:
+        #     await websocket.send_json(
+        #         {"sender": msg[0], "message": msg[1], "language": msg[3]}
+        #     )
         print(f"Connected to server - device id: {device_id}")
         return language
 
@@ -62,18 +68,12 @@ class ConnectionManager:
         if device_id in self.user_details:
             del self.user_details[device_id]
 
-    async def send_message(
-        self, sender: str, target_device: str, message: str, language: str
-    ):
+    async def send_message(self, outgoing_data: dict, target_device: str):
         """Send message to a specific device"""
-        print("in send messages....")
-        print("target_device: ", target_device)
         print(f"All active connections: {self.active_connections}")
         if target_device in self.active_connections:
             print(f"Sending message to {target_device}")
             target_socket = self.active_connections[target_device]
             print(f"target_socket: {target_socket}")
-            await target_socket.send_json(
-                {"sender": sender, "message": message, "language": language, "type": "message"}
-            )
+            await target_socket.send_json(outgoing_data)
             print(f"Message sent to {target_device}")

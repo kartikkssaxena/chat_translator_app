@@ -10,7 +10,8 @@ const socketClosure = () => {
                 target_device: "server",
                 message: "Test Ping",
                 sender: DEVICE_ID,
-                language: language
+                language: language,
+                timeStamp: new Date().toISOString()
             };
             console.log("Sending message to the server", messageData);
             socket.send(JSON.stringify(messageData));
@@ -19,3 +20,15 @@ const socketClosure = () => {
 }
 
 export const socketClosureInstance = socketClosure();
+
+export const chatHistoryClosure = () => {
+    let runOnce = false;
+    return (param, func)=>{
+        if(runOnce) return;
+        runOnce = true;
+        func(param);
+        console.log("Chat history closure function called with", param);
+    }
+}
+
+export const chatHistoryClosureInstance = chatHistoryClosure();
