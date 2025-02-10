@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import './ChatComponent.css';
-import { socketClosureInstance } from '../utils';
+import { chatHistoryClosureInstance, socketClosureInstance } from '../utils';
 
 const ChatComponent = ({ deviceId, language, socket }) => {
     const [newMessage, setNewMessage] = useState('');
@@ -31,6 +31,10 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                 } else if (receivedMessage?.type === 'active_users') {
                     console.log('active users list -', receivedMessage);
                     setActiveUsers(receivedMessage?.users);
+                }else if( receivedMessage?.type === 'chat_history'){
+                    console.log('chat history -', receivedMessage);
+                    chatHistoryClosureInstance(receivedMessage?.chat_history, setChatHistory);
+                    // setChatHistory(receivedMessage?.chat_history);
                 }
             };
 

@@ -2,6 +2,7 @@ import asyncio
 import websockets
 from fastapi import WebSocket
 from src.database.database_manager import DatabaseManager
+from src.chat_history.chat_backup_handler import fetch_chat_history
 import json
 
 class ConnectionManager:
@@ -17,16 +18,6 @@ class ConnectionManager:
         
         # Retrieve device language
         language = self.db_manager.get_device_language(device_id)
-        
-        # Retrieve and send chat history
-        chat_history = self.db_manager.get_chat_history(device_id, device_id)
-        for msg in chat_history:
-            await websocket.send_json({
-                'sender': msg[0],
-                'message': msg[1],
-                'language': msg[3]
-            })
-        
         return language
 
     def disconnect(self, device_id: str):
@@ -48,6 +39,21 @@ class ConnectionManager:
         """Connect to the server and start listening for messages"""
         self.server_socket = await websockets.connect(server_url)
         asyncio.create_task(self.listen_to_server())
+
+    async def broadcast_chat_history(self, chat_history: dict):
+        """Broadcast chat history to all connected clients"""
+        print("broadcast_chat_history called")
+        print("chat_history:", json.dumps(chat_history, indent=4))
+        
+        for device_id, websocket in self.active_connections.items():
+            try:
+                await websocket.send_json({
+                    'type': "chat_history",
+                    'chat_history': chat_history
+                })
+                print(f"Sent chat history to {device_id}")
+            except Exception as e:
+                print(f"Failed to send chat history to {device_id}: {e}")
 
     async def broadcast_active_users(self, active_users: dict):
         """Broadcast list of active users to all connected clients"""
@@ -78,6 +84,11 @@ class ConnectionManager:
                 if message_json["type"] == "active_users":
                     print(message_json)
                     await self.broadcast_active_users(message_json)
+
+                    # boradcast chat history
+                    chat_history = fetch_chat_history()
+                    await self.broadcast_chat_history(chat_history)
+
                 else:
                     await self.broadcast_message(message)
             except websockets.ConnectionClosed:

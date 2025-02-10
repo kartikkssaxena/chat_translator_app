@@ -1,8 +1,10 @@
+import os
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from src.database.database_manager import DatabaseManager
 from src.websocket.connection_manager import ConnectionManager
+from src.chat_history.chat_backup_handler import update_chat_history
 
 # Create database and connection managers
 db_manager = DatabaseManager()
@@ -47,13 +49,10 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
                 db_manager.save_device_language(device_id, new_language )
                 language = new_language 
 
-            # # Save message to database
-            # db_manager.save_message(
-            #     sender=device_id, 
-            #     receiver=target_device, 
-            #     message=message,
-            #     language=language
-            # )
+            # Ensure chat_backups folder exists
+            if not os.path.exists('chat_backups'):
+                os.makedirs('chat_backups')
+            update_chat_history (device_id, data )
 
             print("sending data to server")
             # Forward message to the server

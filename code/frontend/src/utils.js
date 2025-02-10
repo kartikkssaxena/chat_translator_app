@@ -20,3 +20,15 @@ const socketClosure = () => {
 }
 
 export const socketClosureInstance = socketClosure();
+
+export const chatHistoryClosure = () => {
+    let runOnce = false;
+    return (param, func)=>{
+        if(runOnce) return;
+        runOnce = true;
+        func(param);
+        console.log("Chat history closure function called with", param);
+    }
+}
+
+export const chatHistoryClosureInstance = chatHistoryClosure();
