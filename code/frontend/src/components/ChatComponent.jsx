@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Mic, MicOff } from 'lucide-react';
 import './ChatComponent.css';
 import { chatHistoryClosureInstance, socketClosureInstance } from '../utils';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 const ChatComponent = ({ deviceId, language, socket }) => {
     const [newMessage, setNewMessage] = useState('');
     const [activeUsers, setActiveUsers] = useState([]);
     const [currentUser, setCurrentUser] = useState({});
     const [chatHistory, setChatHistory] = useState({});
+    const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+    const [isListening, setIsListening] = useState(false);
 
     useEffect(() => {
         if (socket) {
@@ -41,6 +44,10 @@ const ChatComponent = ({ deviceId, language, socket }) => {
             socketClosureInstance(socket, deviceId, language);
         }
     }, [socket, deviceId, language]);
+
+    useEffect(() => {
+        setNewMessage(transcript);
+    }, [transcript]);
 
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
@@ -79,6 +86,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
         socket.send(JSON.stringify(messageData));
         // clear input field
         setNewMessage('');
+        resetTranscript();
     };
 
     const getChatHistory = () => {
@@ -94,6 +102,23 @@ const ChatComponent = ({ deviceId, language, socket }) => {
         }
         return chatHistory[currentUser.device_id];
     }
+
+    const toggleListening = () => { 
+        if (!browserSupportsSpeechRecognition) { 
+            alert("Your browser doesn't support speech recognition."); 
+            return; 
+        }
+
+        if (listening) { 
+            SpeechRecognition.stopListening(); 
+            setIsListening(false); 
+        } else { 
+            resetTranscript(); 
+            SpeechRecognition.startListening({ continuous: true }); 
+            setIsListening(true); 
+        } 
+    };
+
     console.log("chatHistory", chatHistory);
     return (
         <div className="chat-container">
@@ -141,7 +166,15 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                             onChange={(e) => setNewMessage(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                             placeholder="Type a message"
+                            className={`voice-input-field ${isListening ? "listening" : ""}`}
                         />
+                        <button 
+                            onClick={toggleListening} 
+                            className={`voice-input-button ${isListening ? "listening" : ""}`} 
+                            title={isListening ? "Stop recording" : "Start recording"}
+                        >
+                            {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                        </button>
                         <button onClick={sendMessage}>
                             <Send />
                         </button>
