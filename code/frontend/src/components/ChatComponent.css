@@ -126,11 +126,28 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 0;
+    margin: 0 0.5rem;
 }
 
 .chat-input button:hover {
     background-color: #1d4ed8;
+}
+
+.mic-button {
+    background-color: #10b981;
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+.mic-button:hover {
+    background-color: #059669;
 }
 
 .language-dropdown {
@@ -194,4 +211,12 @@ body {
         transform: none;
         margin-top: 0.5rem;
     }
+}
+
+.voice-input-field.listening {
+    border-color: #10b981;
+}
+
+.voice-input-button.listening {
+    background-color: #059669;
 }
