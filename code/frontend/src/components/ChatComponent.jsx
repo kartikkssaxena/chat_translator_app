@@ -26,7 +26,8 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                                 sender: receivedMessage?.sender || '',
                                 language: receivedMessage?.language || '',
                                 message: receivedMessage?.message || '',
-                                timeStamp: receivedMessage?.timeStamp || new Date().toISOString()
+                                timeStamp: receivedMessage?.timeStamp || new Date().toISOString(),
+                                translated_message: receivedMessage?.translated_message || ''
                             }
                         ]
                     }));
@@ -56,7 +57,8 @@ const ChatComponent = ({ deviceId, language, socket }) => {
             sender: deviceId,
             language: language,
             message: newMessage,
-            timeStamp: timeStamp
+            timeStamp: timeStamp,
+            translated_message: ""
         }
         // update chat history
         if (deviceId !== currentUser.device_id) {
@@ -80,7 +82,8 @@ const ChatComponent = ({ deviceId, language, socket }) => {
             message: newMessage,
             language: language,
             chatHistory: updatedHistory,
-            timeStamp: timeStamp
+            timeStamp: timeStamp,
+            translated_message:""
         };
         // send message to server
         socket.send(JSON.stringify(messageData));

@@ -5,6 +5,7 @@ from src.database.database_manager import DatabaseManager
 from src.chat_history.chat_backup_handler import fetch_chat_history
 import json
 
+
 class ConnectionManager:
     def __init__(self, db_manager: DatabaseManager):
         self.active_connections = {}
@@ -15,7 +16,7 @@ class ConnectionManager:
         """Connect a new client and retrieve chat history"""
         await websocket.accept()
         self.active_connections[device_id] = websocket
-        
+
         # Retrieve device language
         language = self.db_manager.get_device_language(device_id)
         return language
@@ -25,15 +26,15 @@ class ConnectionManager:
         if device_id in self.active_connections:
             del self.active_connections[device_id]
 
-    async def send_message(self, sender: str, target_device: str, message: str, language: str):
+    async def send_message(
+        self, sender: str, target_device: str, message: str, language: str
+    ):
         """Send message to a specific device"""
         if target_device in self.active_connections:
             target_socket = self.active_connections[target_device]
-            await target_socket.send_json({
-                'sender': sender,
-                'message': message,
-                'language': language
-            })
+            await target_socket.send_json(
+                {"sender": sender, "message": message, "language": language}
+            )
 
     async def connect_to_server(self, server_url: str):
         """Connect to the server and start listening for messages"""
@@ -44,13 +45,12 @@ class ConnectionManager:
         """Broadcast chat history to all connected clients"""
         print("broadcast_chat_history called")
         print("chat_history:", json.dumps(chat_history, indent=4))
-        
+
         for device_id, websocket in self.active_connections.items():
             try:
-                await websocket.send_json({
-                    'type': "chat_history",
-                    'chat_history': chat_history
-                })
+                await websocket.send_json(
+                    {"type": "chat_history", "chat_history": chat_history}
+                )
                 print(f"Sent chat history to {device_id}")
             except Exception as e:
                 print(f"Failed to send chat history to {device_id}: {e}")
@@ -65,13 +65,15 @@ class ConnectionManager:
         """Broadcast message to all connected clients"""
         message_json = json.loads(message)
         for device_id, websocket in self.active_connections.items():
-            await websocket.send_json({
-                'sender': message_json['sender'],
-                'message': message_json['message'],
-                'language': message_json['language'],
-                'type': message_json['type'],
-                'timeStamp': message_json['timeStamp']
-            })
+            await websocket.send_json(
+                {
+                    "sender": message_json["sender"],
+                    "message": message_json["message"],
+                    "language": message_json["language"],
+                    "type": message_json["type"],
+                    "timeStamp": message_json["timeStamp"],
+                }
+            )
 
     async def listen_to_server(self):
         """Listen for messages from the server and broadcast them"""
@@ -80,7 +82,7 @@ class ConnectionManager:
                 message = await self.server_socket.recv()
                 message_json = json.loads(message)
                 print(f"Received message from server: {message_json}")
-                
+
                 if message_json["type"] == "active_users":
                     print(message_json)
                     await self.broadcast_active_users(message_json)
@@ -95,15 +97,26 @@ class ConnectionManager:
                 print("Connection to server closed")
                 break
 
-    async def send_message_to_server(self, sender: str, target_device: str, message: str, language: str, timeStamp: str):
+    async def send_message_to_server(
+        self,
+        sender: str,
+        target_device: str,
+        message: str,
+        language: str,
+        timeStamp: str,
+        translated_message: str,
+    ):
         """Send message to the server"""
         if self.server_socket:
             await self.server_socket.send(
-                json.dumps({
-                    'sender': sender,
-                    'target_device': target_device,
-                    'message': message,
-                    'language': language,
-                    'timeStamp': timeStamp
-                })
+                json.dumps(
+                    {
+                        "sender": sender,
+                        "target_device": target_device,
+                        "message": message,
+                        "language": language,
+                        "timeStamp": timeStamp,
+                        "translated_message": translated_message,
+                    }
+                )
             )
