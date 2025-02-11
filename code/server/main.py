@@ -38,30 +38,15 @@ async def websocket_endpoint(websocket: WebSocket):
             language = data.get("language", language)
             timeStamp = data.get('timeStamp', '')
 
-            print(f"server - Received message from {device_id} to {target_device}")
-            print(f"server - Message: {message}")
-            # print(f"server - Language: {new_language}")
-
-            # # Save device language if changed
-            # if new_language != language:
-            #     db_manager.save_device_language(device_id, new_language)
-            #     language = new_language
-
-            # # Save message to database
-            # db_manager.save_message(
-            #     sender=device_id,
-            #     receiver=target_device,
-            #     message=message,
-            #     language=language,
-            # )
+            # print(f"server - Received message from {device_id} to {target_device}")
+            # print(f"server - Message: {message}")
 
             # sending data to target device
-            # Forward message to target backend
             outgoing_data = {
+                "type": "message",
                 "sender": device_id,
                 "language": language,
                 "message": message,
-                "type": "message",
                 'timeStamp': timeStamp,
             }
             await connection_manager.send_message(outgoing_data, target_device)
