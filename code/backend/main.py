@@ -40,6 +40,7 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
             new_language  = data.get('language', language)
             chatHistory = data.get('chatHistory', [])
             timeStamp = data.get('timeStamp', '')
+            translated_message = data.get('translated_message', '')
 
             print("backend")
             print(f"Received message from frontend", data)
@@ -54,6 +55,13 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
                 os.makedirs('chat_backups')
             update_chat_history (device_id, data )
 
+            # before this we have received the message from the frontend
+            # saved the chat history and language prefernce of the user
+            
+            # this is where we can add the chat translator bit.
+            # set the translated message variable
+
+            # now we are sending data to server
             print("sending data to server")
             # Forward message to the server
             await connection_manager.send_message_to_server(
@@ -61,7 +69,8 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
                 target_device, 
                 message, 
                 language,
-                timeStamp 
+                timeStamp,
+                translated_message
             )
 
     except WebSocketDisconnect:
