@@ -32,26 +32,8 @@ async def websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_json()
             print(f"server - Received message from backend")
             print(f"server - Data: {data}")
-            device_id = data["sender"]
             target_device = data["target_device"]
-            message = data["message"]
-            language = data.get("language", language)
-            timeStamp = data.get("timeStamp", "")
-            translated_message = data.get("translated_message", "")
-
-            # print(f"server - Received message from {device_id} to {target_device}")
-            # print(f"server - Message: {message}")
-
-            # sending data to target device
-            outgoing_data = {
-                "type": "message",
-                "sender": device_id,
-                "language": language,
-                "message": message,
-                "timeStamp": timeStamp,
-                "translated_message": translated_message,
-            }
-            await connection_manager.send_message(outgoing_data, target_device)
+            await connection_manager.send_message(data, target_device)
 
     except WebSocketDisconnect:
         connection_manager.disconnect("server")

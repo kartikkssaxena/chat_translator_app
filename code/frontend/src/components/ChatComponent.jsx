@@ -3,6 +3,7 @@ import { Send, Mic, MicOff } from 'lucide-react';
 import './ChatComponent.css';
 import { chatHistoryClosureInstance, socketClosureInstance } from '../utils';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { v4 as uuidv4 } from 'uuid';
 
 const ChatComponent = ({ deviceId, language, socket }) => {
     const [newMessage, setNewMessage] = useState('');
@@ -53,12 +54,14 @@ const ChatComponent = ({ deviceId, language, socket }) => {
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
         let timeStamp = new Date().toISOString();
+        let messageId =  uuidv4();
         let messageObj = {
             sender: deviceId,
             language: language,
             message: newMessage,
             timeStamp: timeStamp,
-            translated_message: ""
+            translated_message: "",
+            messageId: messageId,
         }
         // update chat history
         if (deviceId !== currentUser.device_id) {
@@ -77,13 +80,15 @@ const ChatComponent = ({ deviceId, language, socket }) => {
         // create message data
         const messageData = {
             type: 'message',
+            messageId: messageId,
+            sender: deviceId,
+            language: language,
             target_device: currentUser.device_id,
             target_device_language: currentUser.language,
             message: newMessage,
-            language: language,
-            chatHistory: updatedHistory,
             timeStamp: timeStamp,
-            translated_message:""
+            translated_message:"",
+            chatHistory: updatedHistory, //to be removed
         };
         // send message to server
         socket.send(JSON.stringify(messageData));

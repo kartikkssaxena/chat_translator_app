@@ -53,6 +53,3 @@ def fetch_chat_history():
                 consolidated_history[target_device] = data.get("chatHistory", [])
                 
     return consolidated_history
-
-
-

@@ -111,6 +111,7 @@ class ConnectionManager:
             await self.server_socket.send(
                 json.dumps(
                     {
+                        "type": "message",
                         "sender": sender,
                         "target_device": target_device,
                         "message": message,
