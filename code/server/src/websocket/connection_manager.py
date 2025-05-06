@@ -72,8 +72,5 @@ class ConnectionManager:
         """Send message to a specific device"""
         print(f"All active connections: {self.active_connections}")
         if target_device in self.active_connections:
-            print(f"Sending message to {target_device}")
             target_socket = self.active_connections[target_device]
-            print(f"target_socket: {target_socket}")
             await target_socket.send_json(outgoing_data)
-            print(f"Message sent to {target_device}")
