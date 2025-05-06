@@ -22,6 +22,7 @@ const socketClosure = () => {
 export const socketClosureInstance = socketClosure();
 
 export const chatHistoryClosure = () => {
+    // because we only receive chat history once from the backend, at application start
     let runOnce = false;
     return (param, func)=>{
         if(runOnce) return;

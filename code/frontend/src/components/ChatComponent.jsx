@@ -53,6 +53,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
 
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
+        toggleListening()
         let timeStamp = new Date().toISOString();
         let messageId =  uuidv4();
         let messageObj = {
@@ -88,7 +89,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
             message: newMessage,
             timeStamp: timeStamp,
             translated_message:"",
-            chatHistory: updatedHistory, //to be removed
+            chatHistory: updatedHistory,
         };
         // send message to server
         socket.send(JSON.stringify(messageData));
