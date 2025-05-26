@@ -72,6 +72,7 @@ class ConnectionManager:
                     "language": message_json["language"],
                     "type": message_json["type"],
                     "timeStamp": message_json["timeStamp"],
+                    "translated_message": message_json.get("translated_message", ""),
                 }
             )
 

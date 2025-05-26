@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.database.database_manager import DatabaseManager
 from src.websocket.connection_manager import ConnectionManager
 from src.chat_history.chat_backup_handler import update_chat_history
+from src.ollama_translator.local_translator import translate_massage
 
 # Create database and connection managers
 db_manager = DatabaseManager()
@@ -34,16 +35,19 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
     try:
         while True:
             # Receive message from frontend
+            print("==============backend===============")
             data = await websocket.receive_json()
             target_device = data['target_device']
             message = data['message']
             new_language  = data.get('language', language)
+            target_device_language = data.get('target_device_language', 'english')  # Default to 'en' if not provided
             timeStamp = data.get('timeStamp', '')
             translated_message = data.get('translated_message', '')
-
-            print("backend")
-            print(f"Received message from frontend", data)
-
+            
+            translated_message = translate_massage(message, target_device_language)
+            print("translated_message", translated_message)
+            data['translated_message'] = translated_message
+            
             # Save device language if changed
             if new_language  != language:
                 db_manager.save_device_language(device_id, new_language )
@@ -56,9 +60,6 @@ async def websocket_endpoint(websocket: WebSocket, device_id: str):
 
             # before this we have received the message from the frontend
             # saved the chat history and language preference of the user
-            
-            # this is where we can add the chat translator bit.
-            # set the translated message variable
 
             # now we are sending data to server
             print("sending data to server")
