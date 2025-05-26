@@ -3,7 +3,6 @@ import json
 
 CHAT_BACKUP_FOLDER = "chat_backups"
 
-
 def update_chat_history(device_id, chatData: dict):
     target_device = chatData.get("target_device", "")
     if target_device == "server":
@@ -13,7 +12,7 @@ def update_chat_history(device_id, chatData: dict):
     chatHistory = chatData.get("chatHistory", [])
 
     file_path = os.path.join(CHAT_BACKUP_FOLDER, f"{target_device}.json")
-    print("chatData", chatData)
+    # print("chatData", chatData)
 
     if not os.path.exists(CHAT_BACKUP_FOLDER):
         os.makedirs(CHAT_BACKUP_FOLDER)

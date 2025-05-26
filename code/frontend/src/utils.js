@@ -24,8 +24,8 @@ export const socketClosureInstance = socketClosure();
 export const chatHistoryClosure = () => {
     // because we only receive chat history once from the backend, at application start
     let runOnce = false;
-    return (param, func)=>{
-        if(runOnce) return;
+    return (param, func) => {
+        if (runOnce) return;
         runOnce = true;
         func(param);
         console.log("Chat history closure function called with", param);
@@ -33,3 +33,5 @@ export const chatHistoryClosure = () => {
 }
 
 export const chatHistoryClosureInstance = chatHistoryClosure();
+
+export const isArray = (arr) => Array.isArray(arr) && arr.length > 0;
