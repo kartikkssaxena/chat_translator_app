@@ -7,7 +7,7 @@ OLLAMA_URL = "http://localhost:11434"
 API_ENDPOINT = f"{OLLAMA_URL}/api/generate"
 
 
-def send_message(prompt: str, language: str) -> str:
+def translate_massage(prompt: str, language: str) -> str:
     """
     Send a message to Ollama and return the response.
 
@@ -47,7 +47,7 @@ def send_message(prompt: str, language: str) -> str:
 # def main():
 #     start_time = time.time()
 #     print("🤖 Thinking...")
-#     response = send_message("Hi my name is kartik, what is your name ?")
+#     response = translate_massage("Hi my name is kartik, what is your name ?")
 #     end_time = time.time()
 #     elapsed = end_time - start_time
 #     print(f"Bot: {response}\n")
