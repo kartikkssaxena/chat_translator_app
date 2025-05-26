@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, Mic, MicOff } from 'lucide-react';
 import './ChatComponent.css';
-import { chatHistoryClosureInstance, socketClosureInstance } from '../utils';
+import { chatHistoryClosureInstance, isArray, socketClosureInstance } from '../utils';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -36,7 +36,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                 } else if (receivedMessage?.type === 'active_users') {
                     console.log('active users list -', receivedMessage);
                     setActiveUsers(receivedMessage?.users);
-                }else if( receivedMessage?.type === 'chat_history'){
+                } else if (receivedMessage?.type === 'chat_history') {
                     console.log('chat history -', receivedMessage);
                     chatHistoryClosureInstance(receivedMessage?.chat_history, setChatHistory);
                     // setChatHistory(receivedMessage?.chat_history);
@@ -53,9 +53,9 @@ const ChatComponent = ({ deviceId, language, socket }) => {
 
     const sendMessage = () => {
         if (!newMessage.trim() || !socket) return;
-        toggleListening()
+        setIsListening(false)
         let timeStamp = new Date().toISOString();
-        let messageId =  uuidv4();
+        let messageId = uuidv4();
         let messageObj = {
             sender: deviceId,
             language: language,
@@ -74,9 +74,9 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                 ]
             }));
         }
-        
+
         // Created a local copy of updated history to send to server. This is because state updates are async.
-        let updatedHistory = {...chatHistory};
+        let updatedHistory = { ...chatHistory };
         updatedHistory[deviceId] = [...(updatedHistory[deviceId] || []), messageObj];
         // create message data
         const messageData = {
@@ -88,7 +88,7 @@ const ChatComponent = ({ deviceId, language, socket }) => {
             target_device_language: currentUser.language,
             message: newMessage,
             timeStamp: timeStamp,
-            translated_message:"",
+            translated_message: "",
             chatHistory: updatedHistory,
         };
         // send message to server
@@ -112,23 +112,23 @@ const ChatComponent = ({ deviceId, language, socket }) => {
         return chatHistory[currentUser.device_id];
     }
 
-    const toggleListening = () => { 
-        if (!browserSupportsSpeechRecognition) { 
-            alert("Your browser doesn't support speech recognition."); 
-            return; 
+    const toggleListening = () => {
+        if (!browserSupportsSpeechRecognition) {
+            alert("Your browser doesn't support speech recognition.");
+            return;
         }
 
-        if (listening) { 
-            SpeechRecognition.stopListening(); 
-            setIsListening(false); 
-        } else { 
-            resetTranscript(); 
-            SpeechRecognition.startListening({ continuous: true }); 
-            setIsListening(true); 
-        } 
+        if (listening) {
+            SpeechRecognition.stopListening();
+            setIsListening(false);
+        } else {
+            resetTranscript();
+            SpeechRecognition.startListening({ continuous: true });
+            setIsListening(true);
+        }
     };
 
-    console.log("chatHistory", chatHistory);
+    let currentChatHistory = getChatHistory();
     return (
         <div className="chat-container">
             <div className="chat-header">
@@ -156,13 +156,14 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                 </div>
                 <div className='chat-window'>
                     <div className="chat-messages">
-                        {getChatHistory().map((msg, index) => (
+                        {isArray(currentChatHistory) && currentChatHistory.map((msg, index) => (
                             <div
                                 key={index}
                                 className={`message ${msg.sender === deviceId ? 'message-sent' : 'message-received'}`}
                             >
                                 <div className="message-text">
-                                    {msg.message}
+                                    <p> Original - {msg.message}</p>
+                                    <p> Translated - {msg.translated_message}</p>
                                 </div>
                             </div>
                         ))}
@@ -177,9 +178,9 @@ const ChatComponent = ({ deviceId, language, socket }) => {
                             placeholder="Type a message"
                             className={`voice-input-field ${isListening ? "listening" : ""}`}
                         />
-                        <button 
-                            onClick={toggleListening} 
-                            className={`voice-input-button ${isListening ? "listening" : ""}`} 
+                        <button
+                            onClick={toggleListening}
+                            className={`voice-input-button ${isListening ? "listening" : ""}`}
                             title={isListening ? "Stop recording" : "Start recording"}
                         >
                             {isListening ? <MicOff size={20} /> : <Mic size={20} />}
